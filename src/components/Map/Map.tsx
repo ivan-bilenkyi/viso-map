@@ -1,7 +1,8 @@
-import React, {useRef} from "react";
-import { GoogleMap } from "@react-google-maps/api";
-import { defaultTheme } from "./Theme.ts";
-import styles from './Map.module.css'
+import React, { useCallback, useRef, useState } from "react";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import { defaultTheme } from "./Theme";
+import styles from './Map.module.css';
+import {deleteMarkerById, getMarkers, updateMarker} from "../../firebase.ts";
 
 const containerStyle = {
     width: '100%',
@@ -21,19 +22,45 @@ const defaultOption = {
     disableDoubleClickZoom: false,
     fullscreenControl: false,
     styles: defaultTheme
-}
+};
 
-export const Map = ({ center }) => {
+export const MODES = {
+    MOVE: 0,
+    SET_MARKERS: 1
+};
 
-    const mapRef = useRef(undefined)
+export const Map = ({ center, mode, markers, onMarkerAdd }) => {
+    const mapRef = useRef(undefined);
 
-    const onLoad = React.useCallback(function callback(map) {
+    const onLoad = useCallback((map) => {
         mapRef.current = map;
-    }, [])
+    }, []);
 
-    const onUnmount = React.useCallback(function callback(map) {
+    const onUnmount = useCallback(() => {
         mapRef.current = undefined;
-    }, [])
+    }, []);
+
+    const onClick = useCallback((location) => {
+        if (mode === MODES.SET_MARKERS) {
+            const lat = location.latLng.lat();
+            const lng = location.latLng.lng();
+            onMarkerAdd({ lat, lng })
+        }
+    }, [mode, onMarkerAdd]);
+
+    const handleDrag = (e: google.maps.MapMouseEvent, marker) => {
+        if (e.latLng) {
+            const lat = e.latLng.lat()
+            const lng = e.latLng.lng()
+            updateMarker(marker.id, {
+                id: marker.id,
+                location: {
+                    lat: lat,
+                    lng: lng
+                },
+            });
+        }
+    }
 
 
     return (
@@ -45,10 +72,22 @@ export const Map = ({ center }) => {
                 onLoad={onLoad}
                 onUnmount={onUnmount}
                 options={defaultOption}
+                onClick={onClick}
             >
-                { /* Child components, such as markers, info windows, etc. */ }
-                <></>
+                {markers.map(({location, id}, ind) => (
+                    <Marker
+                        key={ind}
+                        position={location}
+                        draggable={true}
+                        onDragEnd={(e) => { handleDrag(e, {location, id}) }}
+                        label={{
+                            text: String(id),
+                            color: 'white',
+                            fontSize: '16px',
+                        }}
+                    />
+                ))}
             </GoogleMap>
         </div>
-    )
-}
+    );
+};

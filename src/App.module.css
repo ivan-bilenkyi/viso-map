@@ -13,10 +13,16 @@
     display: flex;
 }
 
-.modeToggle {
+.button {
     background: #f9f9f9;
     border: 1px solid rgb(34, 34, 34);
     border-radius: 16px;
+    padding: 10px 15px;
     font-size: 1rem;
     cursor: pointer;
+    white-space: nowrap;
+}
+
+.modeToggle {
+    border: 1px solid rgba(0, 128, 0, 0.5);
 }
