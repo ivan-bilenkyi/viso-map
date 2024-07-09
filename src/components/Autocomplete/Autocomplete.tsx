@@ -21,7 +21,7 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({ isLoaded, onSelect }
         init,
         clearSuggestions,
     } = usePlacesAutocomplete({
-        callbackName: "YOUR_CALLBACK_NAME", // Replace with actual callback name
+        callbackName: "YOUR_CALLBACK_NAME",
         initOnMount: false,
         debounce: 300,
     });
@@ -31,7 +31,6 @@ export const Autocomplete: React.FC<AutocompleteProps> = ({ isLoaded, onSelect }
     });
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Update the keyword of the input element
         setValue(e.target.value);
     };
 

@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, onValue, remove} from 'firebase/database'
+import {MarkerType} from "./types.ts";
 
 const API_KEY = import.meta.env.VITE_FIREBASE_API_KEY;
 const AUTH_DOMAIN = import.meta.env.VITE_AUTH_DOMAIN;
@@ -22,11 +23,12 @@ const firebaseConfig = {
 initializeApp(firebaseConfig);
 const db = getDatabase();
 
-export const addMarker = async (marker) => {
+
+export const addMarker = async (marker: MarkerType) => {
     try {
         await set(ref(db, `markers/${marker.id}`), {
             id: marker.id,
-            location: marker.loc,
+            location: marker.location,
             timestamp: Date.now()
         })
     }
@@ -37,18 +39,23 @@ export const addMarker = async (marker) => {
 
 export const getMarkers = () => {
     return new Promise((resolve, reject) => {
-        const markersRef = ref(db, 'markers');
+        try {
+            const markersRef = ref(db, 'markers');
 
-        onValue(markersRef, (snapshot) => {
-            const markers = [];
-            snapshot.forEach((childSnapshot) => {
-                const marker = childSnapshot.val();
-                markers.push(marker);
+            onValue(markersRef, (snapshot) => {
+                const markers: MarkerType[] = [];
+                snapshot.forEach((childSnapshot) => {
+                    const marker = childSnapshot.val();
+                    markers.push(marker);
+                });
+                resolve(markers);
+            }, {
+                onlyOnce: true
             });
-            resolve(markers);
-        }, {
-            onlyOnce: true
-        });
+        } catch (error) {
+            console.error('Error fetching markers:', error);
+            reject(error);
+        }
     });
 };
 
@@ -61,7 +68,7 @@ export const deleteMarkers = async () => {
     }
 };
 
-export const updateMarker = async (markerId, newMarkerData) => {
+export const updateMarker = async (markerId: string, newMarkerData: MarkerType) => {
     try {
         await set(ref(db, `markers/${markerId}`), newMarkerData);
         console.log(`Маркер з id ${markerId} оновлено в Firebase`);

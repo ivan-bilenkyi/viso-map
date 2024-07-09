@@ -1,9 +1,10 @@
-import { useJsApiLoader } from "@react-google-maps/api";
+import {LoadScriptProps, useJsApiLoader} from "@react-google-maps/api";
 import { Map, MODES } from './components/Map';
 import { Autocomplete } from "./components/Autocomplete";
 import styles from './App.module.css';
 import { useCallback, useEffect, useState } from "react";
-import {addMarker, deleteMarkers, getMarkers} from "./firebase"; // Виправлено шлях імпорту
+import {addMarker, deleteMarkers, getMarkers} from "./firebase";
+import {MarkerType} from "./types.ts";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -12,21 +13,23 @@ const defaultCenter = {
     lng: 24.0297
 };
 
-const libraries = ['places'];
+const libraries: LoadScriptProps['libraries'] = ['places'];
+
 
 function App() {
     const [center, setCenter] = useState(defaultCenter);
     const [mode, setMode] = useState(MODES.MOVE);
-    const [markers, setMarkers] = useState([]);
+    const [markers, setMarkers] = useState<MarkerType[]>([]);
+
 
     const { isLoaded } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: API_KEY,
-        libraries
+        libraries: libraries,
     });
 
     const onPlaceSelect = useCallback(
-        (coordinates) => {
+        (coordinates: { lat: number, lng: number } ) => {
             setCenter(coordinates);
         },
         []
@@ -36,14 +39,15 @@ function App() {
         setMode(prevMode => prevMode === MODES.MOVE ? MODES.SET_MARKERS : MODES.MOVE);
     }, []);
 
-    const onMarkerAdd = async (coordinates) => {
+    const onMarkerAdd = async (coordinates: { lat: number, lng: number }) => {
             try {
-                const marker = {
-                    id: markers.length + 1,
-                    loc: coordinates
+                const marker: MarkerType = {
+                    id: String(markers.length + 1),
+                    location: coordinates,
+                    timestamp: Date.now()
                 };
-                addMarker(marker);
-                const fetchedMarkers = await getMarkers();
+                await addMarker(marker);
+                const fetchedMarkers = await getMarkers() as MarkerType[];
                 setMarkers(fetchedMarkers);
             }catch (e){
                 console.log(e)

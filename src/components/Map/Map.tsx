@@ -3,6 +3,7 @@ import { GoogleMap, Marker } from "@react-google-maps/api";
 import { defaultTheme } from "./Theme";
 import { updateMarker } from "../../firebase";
 import styles from './Map.module.css';
+import {MarkerType} from "../../types.ts";
 
 interface MapProps {
     center: google.maps.LatLngLiteral;
@@ -11,10 +12,6 @@ interface MapProps {
     onMarkerAdd: (coordinates: google.maps.LatLngLiteral) => void;
 }
 
-interface MarkerType {
-    id: string;
-    location: google.maps.LatLngLiteral;
-}
 
 const containerStyle: React.CSSProperties = {
     width: '100%',
@@ -66,13 +63,15 @@ export const Map: React.FC<MapProps> = ({ center, mode, markers, onMarkerAdd }) 
         if (e.latLng) {
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
-            updateMarker(marker.id, {
+            const newMarkerData: MarkerType = {
                 id: marker.id,
                 location: {
                     lat: lat,
                     lng: lng
                 },
-            });
+                timestamp: Date.now()
+            };
+            updateMarker(marker.id, newMarkerData);
         }
     };
 
