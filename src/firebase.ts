@@ -19,7 +19,6 @@ const firebaseConfig = {
     databaseURL: DATABASE_URL
 };
 
-// Initialize Firebase
 initializeApp(firebaseConfig);
 const db = getDatabase();
 
@@ -46,9 +45,9 @@ export const getMarkers = () => {
                 const marker = childSnapshot.val();
                 markers.push(marker);
             });
-            resolve(markers); // Повертаємо маркери через resolve
+            resolve(markers);
         }, {
-            onlyOnce: true // Опціонально: отримати дані тільки один раз
+            onlyOnce: true
         });
     });
 };

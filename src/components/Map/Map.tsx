@@ -1,15 +1,27 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef } from "react";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { defaultTheme } from "./Theme";
+import { updateMarker } from "../../firebase";
 import styles from './Map.module.css';
-import {deleteMarkerById, getMarkers, updateMarker} from "../../firebase.ts";
 
-const containerStyle = {
+interface MapProps {
+    center: google.maps.LatLngLiteral;
+    mode: number;
+    markers: MarkerType[];
+    onMarkerAdd: (coordinates: google.maps.LatLngLiteral) => void;
+}
+
+interface MarkerType {
+    id: string;
+    location: google.maps.LatLngLiteral;
+}
+
+const containerStyle: React.CSSProperties = {
     width: '100%',
     height: '100%'
 };
 
-const defaultOption = {
+const defaultOption: google.maps.MapOptions = {
     panControl: true,
     zoomControl: true,
     mapTypeControl: false,
@@ -29,10 +41,10 @@ export const MODES = {
     SET_MARKERS: 1
 };
 
-export const Map = ({ center, mode, markers, onMarkerAdd }) => {
-    const mapRef = useRef(undefined);
+export const Map: React.FC<MapProps> = ({ center, mode, markers, onMarkerAdd }) => {
+    const mapRef = useRef<google.maps.Map | undefined>(undefined);
 
-    const onLoad = useCallback((map) => {
+    const onLoad = useCallback((map: google.maps.Map) => {
         mapRef.current = map;
     }, []);
 
@@ -40,18 +52,20 @@ export const Map = ({ center, mode, markers, onMarkerAdd }) => {
         mapRef.current = undefined;
     }, []);
 
-    const onClick = useCallback((location) => {
+    const onClick = useCallback((location: google.maps.MapMouseEvent) => {
         if (mode === MODES.SET_MARKERS) {
-            const lat = location.latLng.lat();
-            const lng = location.latLng.lng();
-            onMarkerAdd({ lat, lng })
+            const lat = location.latLng?.lat();
+            const lng = location.latLng?.lng();
+            if (lat !== undefined && lng !== undefined) {
+                onMarkerAdd({ lat, lng });
+            }
         }
     }, [mode, onMarkerAdd]);
 
-    const handleDrag = (e: google.maps.MapMouseEvent, marker) => {
+    const handleDrag = (e: google.maps.MapMouseEvent, marker: MarkerType) => {
         if (e.latLng) {
-            const lat = e.latLng.lat()
-            const lng = e.latLng.lng()
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
             updateMarker(marker.id, {
                 id: marker.id,
                 location: {
@@ -60,8 +74,7 @@ export const Map = ({ center, mode, markers, onMarkerAdd }) => {
                 },
             });
         }
-    }
-
+    };
 
     return (
         <div className={styles.container}>
@@ -74,14 +87,14 @@ export const Map = ({ center, mode, markers, onMarkerAdd }) => {
                 options={defaultOption}
                 onClick={onClick}
             >
-                {markers.map(({location, id}, ind) => (
+                {markers.map((marker, ind) => (
                     <Marker
                         key={ind}
-                        position={location}
+                        position={marker.location}
                         draggable={true}
-                        onDragEnd={(e) => { handleDrag(e, {location, id}) }}
+                        onDragEnd={(e) => { handleDrag(e, marker) }}
                         label={{
-                            text: String(id),
+                            text: String(marker.id),
                             color: 'white',
                             fontSize: '16px',
                         }}
@@ -91,3 +104,4 @@ export const Map = ({ center, mode, markers, onMarkerAdd }) => {
         </div>
     );
 };
+

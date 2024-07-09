@@ -4,7 +4,6 @@ import { Autocomplete } from "./components/Autocomplete";
 import styles from './App.module.css';
 import { useCallback, useEffect, useState } from "react";
 import {addMarker, deleteMarkers, getMarkers} from "./firebase"; // Виправлено шлях імпорту
-import { v4 as uuidv4 } from 'uuid';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 

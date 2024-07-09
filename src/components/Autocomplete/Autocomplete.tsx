@@ -1,12 +1,18 @@
+import React, { useEffect } from "react";
 import usePlacesAutocomplete, {
     getGeocode,
     getLatLng,
+    Suggestion,
 } from "use-places-autocomplete";
 import useOnclickOutside from "react-cool-onclickoutside";
-import styles from './Autocomplete.module.css'
-import {useEffect} from "react";
+import styles from './Autocomplete.module.css';
 
-export const Autocomplete = ({ isLoaded, onSelect }) => {
+interface AutocompleteProps {
+    isLoaded: boolean;
+    onSelect: (coordinates: google.maps.LatLngLiteral) => void;
+}
+
+export const Autocomplete: React.FC<AutocompleteProps> = ({ isLoaded, onSelect }) => {
     const {
         ready,
         value,
@@ -15,35 +21,30 @@ export const Autocomplete = ({ isLoaded, onSelect }) => {
         init,
         clearSuggestions,
     } = usePlacesAutocomplete({
-        callbackName: "YOUR_CALLBACK_NAME",
+        callbackName: "YOUR_CALLBACK_NAME", // Replace with actual callback name
         initOnMount: false,
         debounce: 300,
     });
+
     const ref = useOnclickOutside(() => {
         clearSuggestions();
     });
 
-    const handleInput = (e) => {
+    const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         // Update the keyword of the input element
         setValue(e.target.value);
     };
 
-    const handleSelect =
-        ({ description }) =>
-            () => {
-                // When the user selects a place, we can replace the keyword without request data from API
-                // by setting the second parameter to "false"
-                setValue(description, false);
-                clearSuggestions();
-                console.log(description)
+    const handleSelect = (suggestion: Suggestion) => () => {
+        setValue(suggestion.description, false);
+        clearSuggestions();
 
-                // Get latitude and longitude via utility functions
-                getGeocode({ address: description }).then((results) => {
-                    const { lat, lng } = getLatLng(results[0]);
-                    console.log("📍 Coordinates: ", { lat, lng });
-                    onSelect({ lat, lng });
-                });
-            };
+        getGeocode({ address: suggestion.description }).then((results) => {
+            const { lat, lng } = getLatLng(results[0]);
+            console.log("📍 Coordinates: ", { lat, lng });
+            onSelect({ lat, lng });
+        });
+    };
 
     const renderSuggestions = () =>
         data.map((suggestion) => {
@@ -60,14 +61,13 @@ export const Autocomplete = ({ isLoaded, onSelect }) => {
         });
 
     useEffect(() => {
-        if(isLoaded) {
-            init()
+        if (isLoaded) {
+            init();
         }
-    }, [isLoaded, init])
+    }, [isLoaded, init]);
 
     return (
-
-        <div className={styles.container}>
+        <div className={styles.container} ref={ref}>
             <input
                 type='text'
                 className={styles.input}
@@ -78,5 +78,6 @@ export const Autocomplete = ({ isLoaded, onSelect }) => {
             />
             {status === "OK" && <ul className={styles.suggestions}>{renderSuggestions()}</ul>}
         </div>
-    )
-}
+    );
+};
+
